@@ -17,8 +17,11 @@ public class CallReceiver extends BroadcastReceiver {
 
         String state = intent.getStringExtra(TelephonyManager.EXTRA_STATE);
         Log.d(TAG, "onReceive " + state);
-        if (state != null && !state.equals(TelephonyManager.EXTRA_STATE_IDLE)){
+        if(state == null){
             context.getApplicationContext().startService(new Intent(context.getApplicationContext(), RecorderCallService.class));
         }
+//        if (state != null && !state.equals(TelephonyManager.EXTRA_STATE_IDLE)){
+//            context.getApplicationContext().startService(new Intent(context.getApplicationContext(), RecorderCallService.class));
+//        }
     }
 }

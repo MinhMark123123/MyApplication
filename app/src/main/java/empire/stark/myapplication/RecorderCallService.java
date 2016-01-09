@@ -146,7 +146,7 @@ public class RecorderCallService extends Service {
 
                         break;
                     case TelephonyManager.CALL_STATE_OFFHOOK:
-                        Log.d(TAG, " phone state : CALL_STATE_OFFHOOK");
+                        Log.d(TAG, " phone state : CALL_STATE_OFFHOOK mIsRecording " + mIsRecording );
                         if (!mIsRecording) {
                             startRecording(incomingNumber);
                         }
