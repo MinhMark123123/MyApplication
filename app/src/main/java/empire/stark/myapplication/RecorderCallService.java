@@ -20,10 +20,11 @@ import java.io.IOException;
 public class RecorderCallService extends Service {
     private final String TAG = "[RecorderCallService]";
     private MediaRecorder mMediaRecorder;
-    private boolean mIsRecording = false;
+    private boolean mIsRecording ;
     private final String FOLDER_NAME = "RecorderPhoneCall";
     private String mFileType = ".3gp";
     private TelephonyManager mTelephonyManager;
+    private PhoneStateListener mPhoneStateListener;
 
 
     @Nullable
@@ -36,10 +37,11 @@ public class RecorderCallService extends Service {
     public int onStartCommand(Intent intent, int flags, int startId) {
         //
         if (mTelephonyManager == null) {
+            mIsRecording = false;
             Log.d(TAG, "start listen phone state");
             mTelephonyManager = (TelephonyManager) getSystemService(Context.TELEPHONY_SERVICE);
-            PhoneStateListener phoneStateListener = new PhoneStateListener();
-            mTelephonyManager.listen(phoneStateListener, PhoneStateListener.LISTEN_CALL_STATE);
+            mPhoneStateListener = new PhoneStateListener();
+            mTelephonyManager.listen(mPhoneStateListener, PhoneStateListener.LISTEN_CALL_STATE);
         }
 
         //
@@ -48,29 +50,30 @@ public class RecorderCallService extends Service {
 
     private void startRecording(String phoneNumber) {
         Log.d(TAG, " mIsRecording : " + mIsRecording);
-        if (!mIsRecording) {
 
-            //
-            String outPutFile = getOutputFile(phoneNumber);
-            if (outPutFile != null) {
+        //
+        String outPutFile = getOutputFile(phoneNumber);
+        if (outPutFile != null) {
 
-                setupMediaRecorder(MediaRecorder.AudioSource.VOICE_CALL, MediaRecorder.OutputFormat.THREE_GPP, MediaRecorder.AudioEncoder.AMR_NB);
-                //setupBitRate();
-                setOutPutFile(outPutFile);
-                try {
+            setupMediaRecorder(MediaRecorder.AudioSource.VOICE_CALL, MediaRecorder.OutputFormat.THREE_GPP, MediaRecorder.AudioEncoder.AMR_NB);
+            //setupBitRate();
+            setOutPutFile(outPutFile);
+            try {
 
-                    mMediaRecorder.prepare();
-                } catch (Exception e) {
-                    e.printStackTrace();
-                }
-                Log.d(TAG, "mMediaRecorder is trying start");
-
+                mMediaRecorder.prepare();
+            } catch (Exception e) {
+                e.printStackTrace();
+            }
+            Log.d(TAG, "mMediaRecorder is trying start");
+            try {
                 mMediaRecorder.start();
-                Log.d(TAG, "mMediaRecorder start success");
-
                 mIsRecording = true;
+                Log.d(TAG, "mMediaRecorder start success mIsRecording : " + mIsRecording);
+            } catch (Exception e) {
+                Log.e(TAG, "mMediaRecorder start unsuccessful");
             }
         }
+
     }
 
     /**
@@ -122,6 +125,7 @@ public class RecorderCallService extends Service {
                 mIsRecording = false;
             }
         }
+        mTelephonyManager.listen(mPhoneStateListener, PhoneStateListener.LISTEN_NONE);
         //stop service
         stopSelf();
     }
@@ -143,8 +147,9 @@ public class RecorderCallService extends Service {
                         break;
                     case TelephonyManager.CALL_STATE_OFFHOOK:
                         Log.d(TAG, " phone state : CALL_STATE_OFFHOOK");
-
-                        startRecording(incomingNumber);
+                        if (!mIsRecording) {
+                            startRecording(incomingNumber);
+                        }
                         break;
                 }
             }
